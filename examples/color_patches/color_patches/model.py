@@ -23,6 +23,7 @@ class ColorCell(mesa.Agent):
         self._col = pos[1]
         self._state = initial_state
         self._next_state = None
+        # is this agent a cultist property
         self._is_cult_leader = False
 
     def get_col(self):
@@ -37,6 +38,7 @@ class ColorCell(mesa.Agent):
         """Return the current state (OPINION) of this cell."""
         return self._state
 
+    # getter for cultist status
     def get_is_cult_leader(self):
         return self._is_cult_leader
 
@@ -49,6 +51,7 @@ class ColorCell(mesa.Agent):
         """
         _cultist_influence = 4
         _neighbor_iter = self.model.grid.iter_neighbors((self._row, self._col), True)
+        # iterator around neighbors to find nearest cultist
         _check_cultist_iter = self.model.grid.iter_neighbors((self._row, self._col), False, radius=_cultist_influence)
         neighbors_opinion = Counter(n.get_state() for n in _neighbor_iter)
         # Following is a a tuple (attribute, occurrences)
@@ -61,6 +64,7 @@ class ColorCell(mesa.Agent):
             if neighbor[1] == polled_opinions[-1][1]:
                 low_tied_opinions.append(neighbor)
 
+        # logic of retrieving closest cultist's opinion if one is nearby
         cult_leader_opinion = None
         dist = 10000
         for neighbor in _check_cultist_iter:
@@ -70,7 +74,7 @@ class ColorCell(mesa.Agent):
                 if new_dist < dist:
                     dist = new_dist
                 cult_leader_opinion = neighbor.get_state()
-
+        # setting opinion based on distance from cultist
         if cult_leader_opinion and random.random() < (0.9 - dist * 0.2):
             self._next_state = cult_leader_opinion
         elif random.random() < 0.1:
@@ -126,6 +130,7 @@ class ColorPatches(mesa.Model):
         if self._steps % 100 == 0:
             self.manipulate_random_cell()
 
+    # function to get random cell and convert it to cultist
     def manipulate_random_cell(self):
         """
         Selects a random cell in the grid and manipulates it by changing its opinion.
@@ -135,7 +140,6 @@ class ColorPatches(mesa.Model):
 
         # Extract the coordinates from the random position tuple
         row, col = random_position[1]
-        print(random_position)
 
         # Get the agent at the selected random position
         agent = self.grid.get_cell_list_contents([(row, col)])[0]
